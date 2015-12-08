@@ -443,7 +443,7 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
     print '... pre-training the model'
     start_time = timeit.default_timer()
     ## Pre-train layer-wise
-    corruption_levels = [.1, .2, .3]
+    corruption_levels = [.1, .2, .3, .3]
     imgData = []
     for i in xrange(sda.n_layers):
         # go through pretraining epochs
