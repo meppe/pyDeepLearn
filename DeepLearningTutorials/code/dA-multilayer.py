@@ -45,6 +45,7 @@ from utils import tile_raster_images
 
 from mlp import HiddenLayer
 from dA import dA
+import math
 
 try:
     import PIL.Image as Image
@@ -394,10 +395,26 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
+    # Limit training data size for debugging
+    trainingDataSize=100
+    train_set_x_data = train_set_x.get_value()[0:trainingDataSize]
+    train_set_x = theano.shared(numpy.asarray(train_set_x_data, dtype=theano.config.floatX), borrow=True)
 
-    # compute number of minibatches for training, validation and testing
+    trainData = train_set_x.get_value(borrow=True)
+    tilesPerRow = int(math.ceil(math.sqrt(int(trainData.shape[0]))))
+    imgArray = tile_raster_images(
+        X=trainData,
+        img_shape=(28, 28), tile_shape=(tilesPerRow, tilesPerRow),
+        tile_spacing=(1, 1))
+
+    image = Image.fromarray(imgArray)
+    imgFileName = "train_data.png"
+    image.save(imgFileName)
+
+     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]
     n_train_batches /= batch_size
+
 
     # numpy random generator
     # start-snippet-3
@@ -407,8 +424,7 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
     sda = SdA(
         numpy_rng=numpy_rng,
         n_ins=28 * 28,
-        # hidden_layers_sizes=[784, 784, 784],
-        hidden_layers_sizes=[700, 300, 100],
+        hidden_layers_sizes=[700, 400, 100, 10],
         n_outs=10
     )
     # end-snippet-3 start-snippet-4
@@ -422,9 +438,9 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
 
 
     # Lowering parameter values for faster computation during debugging
-    # pretraining_epochs = 1
-    # n_train_batches = 1
-
+    pretraining_epochs = 1
+    n_train_batches = 1
+    #
     print '... pre-training the model'
     start_time = timeit.default_timer()
     ## Pre-train layer-wise
@@ -450,20 +466,13 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
             finalImgData = projectToLowerLayer(thisLayerData, finalImgData)
             j = j -1
 
-        ## Problem: imgArray is the data representing a hidden layer, not the input layer. Hence, the dmensions are
-        # different and this all does not work.
+        tilesPerRow = int(math.ceil(math.sqrt(int(finalImgData.shape[0]))))
         imgArray = tile_raster_images(
             X=finalImgData,
-            img_shape=(28, 28), tile_shape=(10, 10),
+            img_shape=(28, 28), tile_shape=(tilesPerRow, tilesPerRow),
             tile_spacing=(1, 1))
 
-
-
         image = Image.fromarray(imgArray)
-        # image = Image.fromarray(tile_raster_images(
-        #     X=sda.dA_layers[i].W.get_value(borrow=True).T,
-        #     img_shape=(28, 28), tile_shape=(10, 10),
-        #     tile_spacing=(1, 1)))
         imgFileName = "layer_" + str(i) + "_corruption_" + str(corruption_levels[i])+".png"
         image.save(imgFileName)
 
