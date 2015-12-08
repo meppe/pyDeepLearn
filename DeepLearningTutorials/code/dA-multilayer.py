@@ -396,7 +396,8 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
     # Limit training data size for debugging
-    trainingDataSize=100
+    # trainingDataSize=100
+    trainingDataSize = train_set_x.get_value().shape[0]
     train_set_x_data = train_set_x.get_value()[0:trainingDataSize]
     train_set_x = theano.shared(numpy.asarray(train_set_x_data, dtype=theano.config.floatX), borrow=True)
 
