@@ -436,11 +436,10 @@ def test_SdA(finetune_lr=0.1, pretraining_epochs=15,
                                                 batch_size=batch_size)
 
 
-
     # Lowering parameter values for faster computation during debugging
-    pretraining_epochs = 1
-    n_train_batches = 1
-    #
+    # pretraining_epochs = 1
+    # n_train_batches = 1
+
     print '... pre-training the model'
     start_time = timeit.default_timer()
     ## Pre-train layer-wise
